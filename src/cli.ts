@@ -1,26 +1,40 @@
 /**
  * Inspired by https://github.com/kolodziejczakM/xliff_to_json_converter
  */
-
 import { DOMParser } from 'xmldom';
 import fs from 'fs';
-import { generateError, getTranslationKey, getTranslationValue, Error, getTranslationLanguage } from './helpers';
+import { Error, generateError, getTranslationKey, getTranslationLanguage, getTranslationValue } from './helpers';
 import { zipObject } from 'lodash';
 
-const inputFile = process.argv[2];
-let language = '';
+/**
+ * Common config.
+ *    ```
+ *    inputFile:      #: de_DE.xlf
+ *    outputFileName: #: translation `it produce filename: translation.de.json
+ *    language:       #: undefined by default, takes from inputFile
+ *    ```
+ */
+const config = {
+  inputFile: process.argv[2],
+  outputFileName: process.argv[3] ?? 'translation',
+  language: '',
+};
 
+type File = string | number | Buffer | URL;
+
+/**
+ * All nodes that we need to generate json file.
+ */
 type TranslationNodes = {
   translationUnits: HTMLCollectionOf<Element>;
   translationTargets: HTMLCollectionOf<Element>;
   translationLanguages: HTMLCollectionOf<Element>;
 };
-type File = string | number | Buffer | URL;
 
 /**
  * Writes a JSON file as `translation.<lang>.json`
  *
- * @param inputFile
+ * @param {File} inputFile
  */
 const main = (inputFile: File) => {
   const error: Error = {
@@ -48,8 +62,7 @@ const main = (inputFile: File) => {
  * @param {string} content
  */
 const createOutputJSON = (content: string) => {
-  // TODO: probably we should use another cli parameter to be more flexible
-  const fileName = `./translation.${language}.json`;
+  const fileName = `./${config.outputFileName}.${config.language}.json`;
 
   fs.writeFile(`${fileName}`, content, err => {
     if (err) {
@@ -64,7 +77,7 @@ const createOutputJSON = (content: string) => {
  * Get translation nodes from XLIFF.
  *
  * @param {Buffer} xmlContent
- * @return {HTMLCollectionOf<Element>} translationUnits, translationTargets
+ * @return {HTMLCollectionOf<Element>} translationUnits, translationTargets, translationLanguages
  */
 const getTranslationNodes = (xmlContent: Buffer) => {
   const inputDoc = new DOMParser().parseFromString(xmlContent.toString());
@@ -88,10 +101,10 @@ const generateJSONContent = (translationNodes: TranslationNodes) => {
   const valuesArray = Array.from(translationTargets).map(target => getTranslationValue(target));
   const languageArray = Array.from(translationLanguages).map(lang => getTranslationLanguage(lang));
 
-  language = languageArray[0];
+  config.language = languageArray[0];
   const content = zipObject(keysArray, valuesArray);
 
   return JSON.stringify(content, null, 2);
 };
 
-main(inputFile);
+main(config.inputFile);

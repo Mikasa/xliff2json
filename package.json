@@ -4,8 +4,7 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "postinstall": "npx sort-package-json",
-    "start": "node ./dist/cli.js"
+    "postinstall": "npx sort-package-json"
   },
   "dependencies": {
     "lodash": "4.17.20",
