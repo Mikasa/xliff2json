@@ -1,1 +1,7 @@
 /node_modules/
+
+# Logs.
+*.log
+
+# OS stuff.
+.DS_Store
